@@ -1,0 +1,55 @@
+name: Deploy LAMP Stack on Staging Server
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checking Out
+        uses: actions/checkout@v4
+
+      - name: Deploy to Staging Server
+        uses: burnett01/rsync-deployments@6.0.0
+        with:
+          switches: -avzr --delete
+          path: ./*
+          remote_path: ~/
+          remote_host: ${{ secrets.STAGING_SERVER_IP }}
+          remote_user: ubuntu
+          remote_key: ${{ secrets.STAGING_SERVER_SSH_PRIVATE_KEY }}
+
+      - name: Deploy and Install Dependencies
+        if: always()
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.STAGING_SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.STAGING_SERVER_SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            sudo yum update -y
+            sudo yum install -y httpd mariadb-server php php-mysqlnd
+            sudo systemctl start httpd
+            sudo systemctl enable httpd
+            sudo systemctl start mariadb
+            sudo systemctl enable mariadb
+            sudo mysql_secure_installation
+            sudo firewall-cmd --permanent --add-service=http
+            sudo firewall-cmd --permanent --add-service=https
+            sudo firewall-cmd --reload
+
+
+
+
+
+
+            
+            
+     
+      
+     
