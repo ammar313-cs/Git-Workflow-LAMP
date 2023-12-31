@@ -44,8 +44,7 @@ jobs:
           script: |
             sudo apt update
             sudo apt install -y apache2 php libapache2-mod-php
-            sudo systemctl start apache2
-            sudo systemctl enable apache2
-            sudo ufw allow 80 # Allow HTTP traffic
-            sudo ufw allow 443 # Allow HTTPS traffic
+            sudo sed -i 's/Listen 80/Listen 3000/' /etc/apache2/ports.conf
+            sudo sed -i 's/<VirtualHost *:80>/<VirtualHost *:3000>/' /etc/apache2/sites-available/000-default.conf
             sudo systemctl restart apache2 || (sudo systemctl status apache2 && exit 1)
+            sudo ufw allow 3000 # Allow new port
