@@ -1,3 +1,9 @@
+name: Deploy LAMP Stack on Staging Server
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: null
 jobs:
  deploy:
     runs-on: ubuntu-latest
