@@ -31,6 +31,8 @@ jobs:
           username: ubuntu
           key: ${{ secrets.STAGING_SERVER_SSH_PRIVATE_KEY }}
           port: 22
+          env:
+            MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
           script: |
             sudo apt update
             sudo dpkg --configure -a 
@@ -39,6 +41,8 @@ jobs:
             sudo systemctl enable apache2.service
             sudo systemctl start mysql.service
             sudo systemctl enable mysql.service
+            echo "mysql-server mysql-server/root_password password $MYSQL_ROOT_PASSWORD" | sudo debconf-set-selections
+            echo "mysql-server mysql-server/root_password_again password $MYSQL_ROOT_PASSWORD" | sudo debconf-set-selections
             sudo mysql_secure_installation
             sudo ufw allow 80  # Allow HTTP traffic
             sudo ufw allow 443  # Allow HTTPS traffic
