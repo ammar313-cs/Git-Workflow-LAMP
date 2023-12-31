@@ -1,43 +1,51 @@
-name: Deploy LAMP Stack on Staging Server
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch: null
 jobs:
-  deploy:
+ deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checking Out
-        uses: actions/checkout@v4
-      - name: Deploy to Staging Server
-        uses: burnett01/rsync-deployments@6.0.0
-        with:
-          switches: -avzr --delete
-          path: ./*
-          remote_path: ~/
-          remote_host: ${{ secrets.STAGING_SERVER_IP }}
-          remote_user: ubuntu
-          remote_key: ${{ secrets.STAGING_SERVER_SSH_PRIVATE_KEY }}
-      - name: Deploy and Install Dependencies
-        if: always()
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.STAGING_SERVER_IP }}
-          username: ubuntu
-          key: ${{ secrets.STAGING_SERVER_SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-            sudo apt update
-            sudo dpkg --configure -a 
-            sudo apt install -y apache2 mariadb-server php php-mysql
-            sudo systemctl start apache2
-            sudo systemctl enable apache2
-            sudo systemctl start mysql
-            sudo systemctl enable mysql
-            echo "mysql-server mysql-server/root_password password ${{ secrets.MYSQL_ROOT_PASSWORD }}" | sudo debconf-set-selections
-            echo "mysql-server mysql-server/root_password_again password ${{ secrets.MYSQL_ROOT_PASSWORD }}" | sudo debconf-set-selections
-            sudo mysql_secure_installation
-            sudo ufw allow 80  # Allow HTTP traffic
-            sudo ufw allow 443  # Allow HTTPS traffic
-            sudo systemctl restart apache2
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Copy SSH Key
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.STAGING_SERVER_IP }}
+        username: ubuntu
+        key: ${{ secrets.STAGING_SERVER_SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          echo ${{ secrets.SSH_PRIVATE_KEY }} | tr -d '\r' > /home/ubuntu/.ssh/id_rsa
+          chmod 600 /home/ubuntu/.ssh/id_rsa
+
+    - name: Copy Files to Remote Server
+      uses: appleboy/scp-action@v1.0.0
+      with:
+        host: ${{ secrets.STAGING_SERVER_IP }}
+        username: ubuntu
+        key: ${{ secrets.STAGING_SERVER_SSH_PRIVATE_KEY }}
+        port: 22
+        source: "./"
+        target: "~/project/"
+
+    - name: Deploy and Install Dependencies
+      if: always()
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.STAGING_SERVER_IP }}
+        username: ubuntu
+        key: ${{ secrets.STAGING_SERVER_SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          cd ~/project
+          sudo apt update
+          sudo dpkg --configure -a 
+          sudo apt install -y apache2 mariadb-server php php-mysql
+          sudo systemctl start apache2
+          sudo systemctl enable apache2
+          sudo systemctl start mysql
+          sudo systemctl enable mysql
+          echo "mysql-server mysql-server/root_password password ${{ secrets.MYSQL_ROOT_PASSWORD }}" | sudo debconf-set-selections
+          echo "mysql-server mysql-server/root_password_again password ${{ secrets.MYSQL_ROOT_PASSWORD }}" | sudo debconf-set-selections
+          sudo mysql_secure_installation
+          sudo ufw allow 80 # Allow HTTP traffic
+          sudo ufw allow 443 # Allow HTTPS traffic
+          sudo systemctl restart apache2
