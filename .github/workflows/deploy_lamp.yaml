@@ -48,3 +48,15 @@ jobs:
             sudo sed -i 's/<VirtualHost *:80>/<VirtualHost *:3000>/' /etc/apache2/sites-available/000-default.conf
             sudo systemctl restart apache2 || (sudo systemctl status apache2 && exit 1)
             sudo ufw allow 3000 # Allow new port
+            
+      - name: Create PHP Info File
+        if: always()
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.STAGING_SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.STAGING_SERVER_SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            echo "<?php phpinfo(); ?>" | sudo tee /var/www/html/info.php
+            sudo chmod 644 /var/www/html/info.php
