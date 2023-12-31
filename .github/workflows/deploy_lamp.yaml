@@ -48,4 +48,4 @@ jobs:
             sudo systemctl enable apache2
             sudo ufw allow 80 # Allow HTTP traffic
             sudo ufw allow 443 # Allow HTTPS traffic
-            sudo systemctl restart apache2
+            sudo systemctl restart apache2 || (sudo systemctl status apache2 && exit 1)
