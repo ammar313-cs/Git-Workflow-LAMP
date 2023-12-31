@@ -52,7 +52,7 @@ jobs:
           key: ${{ secrets.STAGING_SERVER_SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${{ secrets.MYSQL_ROOT_PASSWORD }}';"
+            sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'test';"
 
       - name: Deploy and Install Dependencies
         if: always()
