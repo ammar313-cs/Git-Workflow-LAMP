@@ -33,12 +33,13 @@ jobs:
           port: 22
           script: |
             sudo apt update
+            sudo dpkg --configure -a 
             sudo apt install -y apache2 mariadb-server php php-mysql
-            sudo systemctl start apache2
-            sudo systemctl enable apache2
-            sudo systemctl start mysql
-            sudo systemctl enable mysql
+            sudo systemctl start apache2.service
+            sudo systemctl enable apache2.service
+            sudo systemctl start mysql.service
+            sudo systemctl enable mysql.service
             sudo mysql_secure_installation
-            sudo ufw allow 'Apache'
-            sudo ufw allow 'Apache Full'
-            sudo systemctl restart apache2
+            sudo ufw allow 80  # Allow HTTP traffic
+            sudo ufw allow 443  # Allow HTTPS traffic
+            sudo systemctl restart apache2.service
