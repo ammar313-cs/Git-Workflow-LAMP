@@ -32,24 +32,13 @@ jobs:
           key: ${{ secrets.STAGING_SERVER_SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            sudo yum update -y
-            sudo yum install -y httpd mariadb-server php php-mysqlnd
-            sudo systemctl start httpd
-            sudo systemctl enable httpd
-            sudo systemctl start mariadb
-            sudo systemctl enable mariadb
+            sudo apt update
+            sudo apt install -y apache2 mariadb-server php php-mysql
+            sudo systemctl start apache2
+            sudo systemctl enable apache2
+            sudo systemctl start mysql
+            sudo systemctl enable mysql
             sudo mysql_secure_installation
-            sudo firewall-cmd --permanent --add-service=http
-            sudo firewall-cmd --permanent --add-service=https
-            sudo firewall-cmd --reload
-
-
-
-
-
-
-            
-            
-     
-      
-     
+            sudo ufw allow 'Apache'
+            sudo ufw allow 'Apache Full'
+            sudo systemctl restart apache2
