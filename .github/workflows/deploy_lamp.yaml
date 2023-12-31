@@ -1,18 +1,16 @@
+---
 name: Deploy LAMP Stack on Staging Server
-
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
-
+  workflow_dispatch: null
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checking Out
         uses: actions/checkout@v4
-
       - name: Deploy to Staging Server
         uses: burnett01/rsync-deployments@6.0.0
         with:
@@ -22,7 +20,6 @@ jobs:
           remote_host: ${{ secrets.STAGING_SERVER_IP }}
           remote_user: ubuntu
           remote_key: ${{ secrets.STAGING_SERVER_SSH_PRIVATE_KEY }}
-
       - name: Deploy and Install Dependencies
         if: always()
         uses: appleboy/ssh-action@v1.0.0
@@ -33,17 +30,29 @@ jobs:
           port: 22
           env:
             MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-          script: |
+          script: >
             sudo apt update
+
             sudo dpkg --configure -a 
+
             sudo apt install -y apache2 mariadb-server php php-mysql
+
             sudo systemctl start apache2.service
+
             sudo systemctl enable apache2.service
+
             sudo systemctl start mysql.service
+
             sudo systemctl enable mysql.service
+
             echo "mysql-server mysql-server/root_password password $MYSQL_ROOT_PASSWORD" | sudo debconf-set-selections
+
             echo "mysql-server mysql-server/root_password_again password $MYSQL_ROOT_PASSWORD" | sudo debconf-set-selections
+
             sudo mysql_secure_installation
+
             sudo ufw allow 80  # Allow HTTP traffic
+
             sudo ufw allow 443  # Allow HTTPS traffic
+
             sudo systemctl restart apache2.service
