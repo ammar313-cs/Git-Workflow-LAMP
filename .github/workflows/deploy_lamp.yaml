@@ -42,6 +42,17 @@ jobs:
           port: 22
           source: "./"
           target: "~/project/"
+          
+      - name: Set MySQL Root Password
+        if: always()
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.STAGING_SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.STAGING_SERVER_SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${{ secrets.MYSQL_ROOT_PASSWORD }}';"
 
       - name: Deploy and Install Dependencies
         if: always()
